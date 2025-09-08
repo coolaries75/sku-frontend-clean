@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import StickyActions from "./StickyActions";
 
 const SKUGenerator = () => {
+  const [listQuery, setListQuery] = useState("");
+  const listSearchRef = useRef(null);
   const [isOnline, setIsOnline] = useState(true);
   const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:4000";
-
   const [column, setColumn] = useState("");
   const [row, setRow] = useState("");
   const [category, setCategory] = useState("");
@@ -378,6 +379,36 @@ const SKUGenerator = () => {
   };
 
   // --- UI -------------------------------------------------------------------
+const normalize = (s) => (s ?? "").toString().toLowerCase();
+
+const matchesQuery = (item, q) => {
+  if (!q) return true;
+  const term = q.trim().toLowerCase();
+  const haystack = [
+    item.sku,
+    item.description,
+    item.category,
+    item.subcategory,
+    `${item.column || ""}${item.row || ""}`,
+  ].map(normalize).join(" ");
+  return haystack.includes(term);
+};
+
+const filteredSkus = Array.isArray(skusList)
+  ? skusList.filter((it) => matchesQuery(it, listQuery))
+  : [];
+
+const clearSearch = () => {
+  setListQuery("");
+  if (listSearchRef.current) listSearchRef.current.focus();
+};
+
+const refreshList = async () => {
+  // Re-fetch from backend; also clears the query so you see the full list again
+  await fetchSKUs();
+  clearSearch();
+};
+
 
   return (
     <React.Fragment>
@@ -400,8 +431,27 @@ const SKUGenerator = () => {
         {/* LEFT — list */}
         <div ref={skusListRef} key={skusList.length} className="sku-list">
           <h2>SKU List</h2>
-          {Array.isArray(skusList) &&
-            skusList.map((item, index) => (
+<div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+  <input
+    ref={listSearchRef}
+    type="search"
+    value={listQuery}
+    onChange={(e) => setListQuery(e.target.value)}
+    placeholder="Search by SKU, description, category…"
+    style={{ flex: 1, minWidth: 0 }}
+  />
+  {listQuery && (
+    <button onClick={clearSearch} title="Clear search">✕</button>
+  )}
+  <button onClick={refreshList} title="Refresh list from server">↻</button>
+</div>
+<div style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>
+  {filteredSkus.length} / {Array.isArray(skusList) ? skusList.length : 0} shown
+</div>
+
+
+          {filteredSkus.map((item, index) => (
+
               <div
                 key={index}
                 style={{
