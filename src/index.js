@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App"; // Importing App.js
+import App from "./app"; // Importing App.js
 import './mobile.css';
 
 
