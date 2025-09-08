@@ -9,3 +9,5 @@ dist/
 !.env.example
 
 *.predeploy.*.txt
+src/components/*.txt
+
